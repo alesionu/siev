@@ -1,0 +1,253 @@
+{% extends "estimator/base_layout.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>Mis Estimaciones</h2>
+    <a href="{% url 'estimator' %}" class="btn btn-primary">+ Nueva Estimación</a>
+</div>
+
+<div class="estimations-grid">
+    {% if not estimations %}
+        <div class="no-estimations">
+            <p>No tienes ninguna estimación guardada.</p>
+            <p>Comienza creando una nueva.</p>
+        </div>
+    {% endif %}
+
+    {% for est in estimations %}
+        <div class="estimation-card">
+            <div class="card-header">
+                <h3 class="project-title">Proyecto #{{ est.id }}</h3>
+                <span class="project-date">{{ est.created_at|date:"d M Y" }}</span>
+            </div>
+            
+            <div class="card-body">
+                <div class="cost-highlight">
+                    <span class="cost-label">Costo Estimado</span>
+                    <span class="cost-value">${{ est.result_costo_estimado|floatformat:0 }}</span>
+                </div>
+                
+                <div class="project-details">
+                    <div class="detail-item">
+                        <span class="detail-icon"></span>
+                        <div>
+                            <span class="detail-label">Terreno</span>
+                            <span class="detail-value">{{ est.input_m2_terreno }}m²</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon"></span>
+                        <div>
+                            <span class="detail-label">Dormitorios</span>
+                            <span class="detail-value">{{ est.result_cantidad_dormitorio }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon"></span>
+                        <div>
+                            <span class="detail-label">Tiempo</span>
+                            <span class="detail-value">~{{ est.result_tiempo_meses }} meses</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-actions">
+                <a href="{% url 'estimation_detail' est.id %}" class="btn-view-detail">
+                    Ver Detalles
+                </a>
+                
+                <form method="POST" action="{% url 'delete_estimation' est.id %}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres borrar este proyecto?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-delete">
+                         Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<style>
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.estimations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+    padding: 10px;
+}
+
+.estimation-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.estimation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #182b83 0%, #2575a3 100%);
+    color: white;
+    padding: 20px;
+}
+
+.project-title {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.project-date {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.card-body {
+    padding: 24px;
+}
+
+.cost-highlight {
+    background: linear-gradient(135deg, #93b9fb 0%, #05574d 100%);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.cost-label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+.cost-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.project-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.detail-icon {
+    font-size: 24px;
+}
+
+.detail-item > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.card-actions {
+    padding: 16px 24px;
+    background: #f8f9fa;
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.btn-view-detail {
+    flex: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-view-detail:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-delete {
+    background: white;
+    color: #dc3545;
+    border: 2px solid #dc3545;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.no-estimations {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-estimations p:first-child {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .estimations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+    
+    .btn-delete {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

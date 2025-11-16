@@ -1,0 +1,231 @@
+{% extends "estimator/base_layout.html" %}
+
+{% block content %}
+
+<section id="estimator-form">
+    <h2>Comenzar Estimación</h2>
+    <p>Completa los datos para estimar tu proyecto.</p>
+    
+    <form id="form-estimacion">
+        {% csrf_token %}
+        
+        <label for="project_name">Nombre del Proyecto:</label>
+        <input type="text" id="project_name" name="project_name" placeholder="Ej: Casa de fin de semana" required>
+        
+        <label for="m2_terreno">M² del Terreno:</label>
+        <input type="number" id="m2_terreno" name="m2_terreno" min="50" required>
+        
+        <label for="cantidad_personas">Cantidad de Personas:</label>
+        <input type="number" id="cantidad_personas" name="cantidad_personas" min="1" required>
+        
+        <label for="orientacion">Orientación Principal:</label>
+        <select id="orientacion" name="orientacion" required>
+            <option value="">Selecciona...</option>
+            <option value="1">Norte</option>
+            <option value="2">Este</option>
+            <option value="3">Sur</option>
+            <option value="4">Oeste</option>
+        </select>
+        
+        <label for="forma_terreno">Forma del Terreno:</label>
+        <select id="forma_terreno" name="forma_terreno" required>
+            <option value="">Selecciona...</option>
+            <option value="cuadrado">Cuadrado</option>
+            <option value="rectangular">Rectangular</option>
+            <option value="angosto">Angosto</option>
+            <option value="irregular">Irregular</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" onclick="estimateOnly()" style="flex: 1; background: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
+                 Estimar
+            </button>
+            <button type="button" id="save-button" onclick="saveEstimation()" 
+                    style="flex: 1; background: #28a745; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; display: none;">
+                 Guardar Estimación
+            </button>
+        </div>
+    </form>
+</section>
+
+<section id="results" style="display: none; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <h2>Resultados de la Estimación</h2>
+    
+    <div class="result-summary" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 10px 0; color: #28a745;"> Costo Estimado</h3>
+            <p id="costo" style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">-</p>
+        </div>
+        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 10px 0; color: #007bff;">⏱ Tiempo de Construcción</h3>
+            <p id="tiempo" style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">-</p>
+        </div>
+    </div>
+    
+    <div class="result-details" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0;"> Detalles del Programa</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <p style="margin: 5px 0;"><strong> Dormitorios:</strong> <span id="dormitorios">-</span></p>
+            <p style="margin: 5px 0;"><strong> Baños:</strong> <span id="banos">-</span></p>
+            <p style="margin: 5px 0;"><strong> Cocina:</strong> <span id="m2_cocina">-</span></p>
+            <p style="margin: 5px 0;"><strong> Estar/Comedor:</strong> <span id="m2_estar">-</span></p>
+            <p style="margin: 5px 0;"><strong> M² Dormitorios Total:</strong> <span id="m2_dorms_total">-</span></p>
+            <p style="margin: 5px 0;"><strong> M² Baños Total:</strong> <span id="m2_banos_total">-</span></p>
+        </div>
+    </div>
+    
+    <!-- Reemplazar el bloque de Distribución Sugerida con esto: -->
+<div class="resultado-plano mt-4">
+    <h3 class="h5">Distribución Sugerida</h3>
+    <p class="text-muted fst-italic"><small>(Diagrama conceptual)</small></p>
+    
+    <!-- ¡ELEMENTO CORREGIDO! Añadimos el ID que el JS espera -->
+    <img id="display-plano-img" 
+         src="https://placehold.co/600x400/f0f0f0/ccc?text=Esperando+Estimacion" 
+         alt="Plano sugerido" 
+         class="img-fluid border rounded bg-light">
+</div>
+</section>
+
+<script>
+let lastEstimationData = null;
+let lastEstimationResults = null;
+
+async function estimateOnly() {
+    const projectName = document.getElementById('project_name').value.trim();
+    const m2Terreno = document.getElementById('m2_terreno').value;
+    const cantidadPersonas = document.getElementById('cantidad_personas').value;
+    const orientacion = document.getElementById('orientacion').value;
+    const formaTerreno = document.getElementById('forma_terreno').value;
+    
+    if (!m2Terreno || !cantidadPersonas || !orientacion || !formaTerreno) {
+        alert('Por favor completa todos los campos requeridos');
+        return;
+    }
+    
+    const data = {
+        project_name: projectName || 'Mi Estimación',
+        m2_terreno: parseFloat(m2Terreno),
+        cantidad_personas: parseInt(cantidadPersonas),
+        orientacion: parseInt(orientacion),
+        forma_terreno: formaTerreno
+    };
+    
+    lastEstimationData = data;
+    
+    try {
+        const response = await fetch('/api/estimate/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error en la respuesta del servidor');
+        }
+        
+        const results = await response.json();
+        console.log('Resultados recibidos:', results);
+        lastEstimationResults = results;
+        
+        displayResults(results);
+        document.getElementById('save-button').style.display = 'inline-block';
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Hubo un error al realizar la estimación: ' + error.message);
+    }
+}
+
+async function saveEstimation() {
+    if (!lastEstimationData || !lastEstimationResults) {
+        alert('Primero debes realizar una estimación');
+        return;
+    }
+    
+    const projectName = document.getElementById('project_name').value.trim();
+    if (!projectName) {
+        alert('Por favor ingresa un nombre para el proyecto');
+        document.getElementById('project_name').focus();
+        return;
+    }
+    
+    const dataToSave = {
+        ...lastEstimationData,
+        ...lastEstimationResults,
+        project_name: projectName,
+        layout_key: lastEstimationResults.url_plano_sugerido.replace('estimator/', '').replace('.png', '')
+    };
+    
+    console.log('Guardando datos:', dataToSave);
+    
+    try {
+        const response = await fetch('/api/save-estimation/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(dataToSave)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al guardar');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('¡Estimación guardada exitosamente!');
+            window.location.href = '/';
+        }
+        
+    } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('Hubo un error al guardar la estimación: ' + error.message);
+    }
+}
+
+function displayResults(results) {
+    console.log('Mostrando resultados:', results);
+    
+    document.getElementById('costo').textContent = `USD ${results.costo_estimado.toLocaleString('es-AR')}`;
+    document.getElementById('tiempo').textContent = `~ ${results.tiempo_meses} Meses`;
+    
+    document.getElementById('dormitorios').textContent = results.cantidad_dormitorio;
+    document.getElementById('banos').textContent = results.cantidad_bano;
+    document.getElementById('m2_cocina').textContent = `${results.m2_cocina} m²`;
+    document.getElementById('m2_estar').textContent = `${results.m2_estar_comedor} m²`;
+    document.getElementById('m2_dorms_total').textContent = `${results.m2_dormitorios_total} m²`;
+    document.getElementById('m2_banos_total').textContent = `${results.m2_banos_total} m²`;
+    
+    const imgPlano = document.getElementById('display-plano-img');
+    imgPlano.src = `/static/${results.url_plano_sugerido}`;
+    imgPlano.alt = 'Distribución Sugerida';
+    
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock %}

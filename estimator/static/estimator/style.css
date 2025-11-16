@@ -1,0 +1,22 @@
+
+
+body {
+    
+    background-color: #f8f9fa; /* Un gris muy suave */
+}
+
+
+#display-costo {
+    font-weight: 600; 
+}
+
+#display-plano-img {
+    background-color: #fdfdfd;
+}
+
+
+.form-signin {
+    max-width: 400px;
+    padding: 1rem;
+    margin: auto;
+}

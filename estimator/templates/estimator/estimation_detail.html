@@ -1,0 +1,300 @@
+{% extends "estimator/base_layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <div>
+            <h1>{{ estimation.project_name }}</h1>
+            <p class="detail-subtitle">Creada el {{ estimation.created_at|date:"d de F de Y" }}</p>
+        </div>
+        <div class="detail-actions">
+            <a href="{% url 'dashboard' %}" class="btn-back">← Volver al Listado</a>
+            <form method="POST" action="{% url 'delete_estimation' estimation.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-delete" onclick="return confirm('¿Estás seguro de que quieres borrar este proyecto?')">
+                     Borrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="detail-content">
+        <div class="detail-section">
+            <h2> Datos del Proyecto</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Superficie del Terreno:</span>
+                    <span class="info-value">{{ estimation.input_m2_terreno }} m²</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cantidad de Personas:</span>
+                    <span class="info-value">{{ estimation.input_cantidad_personas }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Orientación:</span>
+                    <span class="info-value">
+                        {% if estimation.input_orientacion == 1 %}Norte
+                        {% elif estimation.input_orientacion == 2 %}Este
+                        {% elif estimation.input_orientacion == 3 %}Sur
+                        {% elif estimation.input_orientacion == 4 %}Oeste
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Forma del Terreno:</span>
+                    <span class="info-value">{{ estimation.input_forma_terreno|capfirst }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section highlight-section">
+            <h2> Presupuesto Estimado</h2>
+            <div class="budget-box">
+                <div class="budget-amount">USD ${{ estimation.result_costo_estimado|floatformat:0 }}</div>
+                <div class="budget-time"> Tiempo estimado: ~{{ estimation.result_tiempo_meses }} meses</div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h2>Programa Sugerido</h2>
+            <div class="program-grid">
+                <div class="program-item">
+                    <span class="program-icon"></span>
+                    <span class="program-label">Dormitorios:</span>
+                    <span class="program-value">{{ estimation.result_cantidad_dormitorio }}</span>
+                </div>
+                <div class="program-item">
+                    <span class="program-icon"></span>
+                    <span class="program-label">Baños:</span>
+                    <span class="program-value">{{ estimation.result_cantidad_bano }}</span>
+                </div>
+                <div class="program-item">
+                    <span class="program-icon"></span>
+                    <span class="program-label">Cocina:</span>
+                    <span class="program-value">{{ estimation.result_m2_cocina|floatformat:1 }} m²</span>
+                </div>
+                <div class="program-item">
+                    <span class="program-icon"></span>
+                    <span class="program-label">Estar/Comedor:</span>
+                    <span class="program-value">{{ estimation.result_m2_estar_comedor|floatformat:1 }} m²</span>
+                </div>
+                <div class="program-item">
+                    <span class="program-icon"></span>
+                    <span class="program-label">Total M² Dormitorios:</span>
+                    <span class="program-value">{{ estimation.result_m2_dormitorios_total|floatformat:1 }} m²</span>
+                </div>
+                <div class="program-item">
+                    <span class="program-icon"></span>
+                    <span class="program-label">Total M² Baños:</span>
+                    <span class="program-value">{{ estimation.result_m2_banos_total|floatformat:1 }} m²</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h2> Distribución Sugerida</h2>
+            <div class="layout-container">
+                <img src="{% static 'estimator/' %}{{ estimation.result_layout_key }}.jpg" alt="Plano sugerido" 
+                     class="layout-image">
+                     <br>
+                    
+
+                <p class="layout-note">(Diagrama conceptual)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.detail-header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #2c3e50;
+}
+
+.detail-subtitle {
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-back {
+    background: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-back:hover {
+    background: #5a6268;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.detail-section {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.detail-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 24px;
+}
+
+.highlight-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.highlight-section h2 {
+    color: white;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.info-value {
+    font-size: 18px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.budget-box {
+    text-align: center;
+}
+
+.budget-amount {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.budget-time {
+    font-size: 20px;
+    opacity: 0.9;
+}
+
+.program-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.program-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.program-icon {
+    font-size: 24px;
+}
+
+.program-label {
+    flex: 1;
+    font-weight: 500;
+    color: #495057;
+}
+
+.program-value {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 18px;
+}
+
+.layout-container {
+    text-align: center;
+}
+
+.layout-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.layout-note {
+    margin-top: 15px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .detail-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .detail-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-back, .btn-delete {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
