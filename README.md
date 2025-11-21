@@ -52,39 +52,39 @@ Git (opcional, si clonas el repositorio)
 
 2. Configuración del Entorno
 
-# 1. Clona este repositorio o descarga el ZIP y descomprímelo
-# git clone https://...
+1. Clona este repositorio o descarga el ZIP y descomprímelo
+git clone https://...
 
-# 2. Entra en la carpeta del proyecto
+2. Entra en la carpeta del proyecto
 cd sistema_estimador
 
-# 3. Crea un entorno virtual
+3. Crea un entorno virtual
 python -m venv venv
 
-# 4. Activa el entorno virtual
-# En Windows:
+4. Activa el entorno virtual
+En Windows:
 .\venv\Scripts\activate
-# En Mac/Linux:
-# source venv/bin/activate
+En Mac/Linux:
+source venv/bin/activate
 
 
 3. Instalación de Dependencias
 
-# 5. Instala todas las librerías necesarias
+5. Instala todas las librerías necesarias
 pip install -r requirements.txt
 
 
 4. Entrenamiento de la IA (Solo se hace una vez)
 
-# 6. Ejecuta el script de entrenamiento.
-# Esto leerá 'datos_proyecto.csv' y creará los archivos .joblib
+6. Ejecuta el script de entrenamiento.
+Esto leerá 'datos_proyecto.csv' y creará los archivos .joblib
 python train_models.py
 
 
 5. Ejecución del Servidor
 
-# 7. Inicia el servidor de Django
+ 7. Inicia el servidor de Django
 python manage.py runserver
 
-# 8. Abre tu navegador
-# Ve a [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+ 8. Abre tu navegador
+ Ve a [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
